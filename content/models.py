@@ -21,6 +21,9 @@ class SiteSettings(models.Model):
     show_search = models.BooleanField(default=True)
     action_background_color = models.CharField(max_length=20, default="#E6D4D8")
     action_text_color = models.CharField(max_length=20, default="#2C2426")
+    footer_heading = models.CharField(max_length=80, default="Connect With Us")
+    footer_background_color = models.CharField(max_length=20, default="#C22226")
+    footer_text_color = models.CharField(max_length=20, default="#FFFFFF")
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -135,10 +138,25 @@ class Stat(models.Model):
     )
     display_value = models.CharField(
         max_length=40,
-        help_text='Shown exactly as typed, for example 1,260 or 4TH.',
+        help_text="Final label, for example 1,260 or 4TH. The page counts up to it.",
     )
     description = models.TextField()
-    background_color = models.CharField(max_length=20, default="#AD3330")
+    count_to = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Number the homepage animates toward. Leave empty to show the label immediately.",
+    )
+    count_suffix = models.CharField(
+        max_length=12,
+        blank=True,
+        help_text="Appended after the animated number, for example TH.",
+    )
+    count_duration_ms = models.PositiveIntegerField(default=2000)
+    use_grouping = models.BooleanField(
+        default=True,
+        help_text="Insert thousands separators while the number counts up.",
+    )
+    background_color = models.CharField(max_length=20, default="#C42127")
     text_color = models.CharField(max_length=20, default="#FFFFFF")
     position = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
@@ -148,3 +166,97 @@ class Stat(models.Model):
 
     def __str__(self) -> str:
         return f"{self.display_value} — {self.section}"
+
+
+class LandingBlock(models.Model):
+    """A homepage band other than the slideshow and the stat row.
+
+    Promo sits beside the hero media. Feature columns share a group_key and
+    one background. News is only the heading for the story list. Impact is
+    the closing full-bleed band.
+    """
+
+    PROMO = "promo"
+    FEATURE = "feature"
+    NEWS = "news"
+    IMPACT = "impact"
+    KIND_CHOICES = [
+        (PROMO, "Promo"),
+        (FEATURE, "Feature"),
+        (NEWS, "News heading"),
+        (IMPACT, "Impact"),
+    ]
+
+    kind = models.CharField(max_length=16, choices=KIND_CHOICES, default=FEATURE)
+    title = models.CharField(max_length=180)
+    body = models.TextField(blank=True)
+    button_label = models.CharField(max_length=120, blank=True)
+    button_url = models.URLField(blank=True, max_length=500)
+    image_file = models.ImageField(upload_to="landing/", blank=True)
+    image_url = models.URLField(
+        blank=True,
+        max_length=500,
+        help_text="Image URL, or a YouTube link for a promo band.",
+    )
+    background_color = models.CharField(max_length=20, default="#000000")
+    overlay_color = models.CharField(max_length=20, default="#00000099")
+    text_color = models.CharField(max_length=20, default="#FFFFFF")
+    button_color = models.CharField(max_length=20, default="#FFFFFF")
+    button_text_color = models.CharField(max_length=20, default="#C42127")
+    group_key = models.CharField(
+        max_length=40,
+        blank=True,
+        help_text="Feature columns with the same key share one background.",
+    )
+    position = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["position", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.get_kind_display()}: {self.title}"
+
+
+class NewsStory(models.Model):
+    title = models.CharField(max_length=220)
+    url = models.URLField(max_length=500)
+    image_file = models.ImageField(upload_to="news/", blank=True)
+    image_url = models.URLField(blank=True, max_length=500)
+    category = models.CharField(max_length=160, blank=True)
+    category_url = models.URLField(blank=True, max_length=500)
+    position = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["position", "id"]
+        verbose_name_plural = "News stories"
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class FooterOffice(models.Model):
+    body = models.TextField(help_text="Line breaks are kept on the page.")
+    position = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["position", "id"]
+        verbose_name_plural = "Footer offices"
+
+    def __str__(self) -> str:
+        return self.body.splitlines()[0][:60]
+
+
+class SocialLink(models.Model):
+    label = models.CharField(max_length=40)
+    url = models.URLField()
+    position = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["position", "id"]
+
+    def __str__(self) -> str:
+        return self.label

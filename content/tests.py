@@ -38,6 +38,25 @@ class HomepageApiTests(TestCase):
         self.assertEqual(research["children"], [])
         about = next(item for item in body["navigation"] if item["label"] == "About Us")
         self.assertGreaterEqual(len(about["children"]), 1)
+        stats = body["sections"][0]["stats"]
+        self.assertEqual([stat["count_to"] for stat in stats], [128, 1260, 677, 4])
+        self.assertEqual(stats[1]["use_grouping"], True)
+        self.assertEqual(stats[3]["count_suffix"], "TH")
+        self.assertEqual(stats[3]["count_duration_ms"], 100)
+        titles = [block["title"] for block in body["blocks"]]
+        self.assertEqual(
+            titles,
+            [
+                "Applications Are Open",
+                "Explore Academics",
+                "Study at UGHE",
+                "News & Updates",
+                "Experience Our Impact",
+            ],
+        )
+        self.assertGreaterEqual(len(body["stories"]), 8)
+        self.assertGreaterEqual(len(body["offices"]), 2)
+        self.assertGreaterEqual(len(body["social_links"]), 3)
 
     def test_inactive_slide_is_hidden(self):
         from content.models import HeroSlide

@@ -1,6 +1,17 @@
 from django.contrib import admin
 
-from content.models import ActionLink, HeroSlide, NavItem, PageSection, SiteSettings, Stat
+from content.models import (
+    ActionLink,
+    FooterOffice,
+    HeroSlide,
+    LandingBlock,
+    NavItem,
+    NewsStory,
+    PageSection,
+    SiteSettings,
+    SocialLink,
+    Stat,
+)
 
 
 class ChildNavInline(admin.TabularInline):
@@ -16,6 +27,9 @@ class StatInline(admin.TabularInline):
     extra = 0
     fields = (
         "display_value",
+        "count_to",
+        "count_suffix",
+        "count_duration_ms",
         "description",
         "background_color",
         "text_color",
@@ -49,6 +63,16 @@ class SiteSettingsAdmin(admin.ModelAdmin):
                     "search_placeholder",
                     "action_background_color",
                     "action_text_color",
+                )
+            },
+        ),
+        (
+            "Footer",
+            {
+                "fields": (
+                    "footer_heading",
+                    "footer_background_color",
+                    "footer_text_color",
                 )
             },
         ),
@@ -113,7 +137,54 @@ class PageSectionAdmin(admin.ModelAdmin):
 
 @admin.register(Stat)
 class StatAdmin(admin.ModelAdmin):
-    list_display = ("display_value", "section", "position", "is_active")
+    list_display = ("display_value", "count_to", "section", "position", "is_active")
     list_editable = ("position", "is_active")
     list_filter = ("section", "is_active")
     ordering = ("section", "position")
+
+
+@admin.register(LandingBlock)
+class LandingBlockAdmin(admin.ModelAdmin):
+    list_display = ("title", "kind", "group_key", "position", "is_active")
+    list_editable = ("position", "is_active")
+    list_filter = ("kind", "is_active")
+    ordering = ("position",)
+    fieldsets = (
+        ("Copy", {"fields": ("kind", "title", "body", "group_key", "position", "is_active")}),
+        ("Media", {"fields": ("image_file", "image_url")}),
+        (
+            "Colours",
+            {
+                "fields": (
+                    "background_color",
+                    "overlay_color",
+                    "text_color",
+                    "button_color",
+                    "button_text_color",
+                )
+            },
+        ),
+        ("Button", {"fields": ("button_label", "button_url")}),
+    )
+
+
+@admin.register(NewsStory)
+class NewsStoryAdmin(admin.ModelAdmin):
+    list_display = ("title", "category", "position", "is_active")
+    list_editable = ("position", "is_active")
+    search_fields = ("title", "category")
+    ordering = ("position",)
+
+
+@admin.register(FooterOffice)
+class FooterOfficeAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "position", "is_active")
+    list_editable = ("position", "is_active")
+    ordering = ("position",)
+
+
+@admin.register(SocialLink)
+class SocialLinkAdmin(admin.ModelAdmin):
+    list_display = ("label", "url", "position", "is_active")
+    list_editable = ("position", "is_active")
+    ordering = ("position",)

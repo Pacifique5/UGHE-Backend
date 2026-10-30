@@ -1,8 +1,8 @@
 """Settings for the UGHE Test Web App API.
 
-Local development uses PostgreSQL directly. Docker is intentionally not
-required: the database role is `postgres` with an empty password, and the
-application database is named `ughe`.
+Local development uses PostgreSQL directly, with the role `postgres`, an
+empty password, and the application database `ughe`. Docker files are
+included for evaluation and are not required on this machine.
 """
 
 import os

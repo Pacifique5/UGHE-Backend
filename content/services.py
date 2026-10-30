@@ -2,7 +2,17 @@
 
 from django.db.models import Prefetch
 
-from content.models import ActionLink, HeroSlide, NavItem, PageSection, SiteSettings
+from content.models import (
+    ActionLink,
+    FooterOffice,
+    HeroSlide,
+    LandingBlock,
+    NavItem,
+    NewsStory,
+    PageSection,
+    SiteSettings,
+    SocialLink,
+)
 
 
 def _file_url(request, file_field) -> str:
@@ -42,6 +52,9 @@ def homepage_payload(request) -> dict:
             "show_search": True,
             "action_background_color": "#E6D4D8",
             "action_text_color": "#2C2426",
+            "footer_heading": "Connect With Us",
+            "footer_background_color": "#C22226",
+            "footer_text_color": "#FFFFFF",
         }
     else:
         site = {
@@ -54,6 +67,9 @@ def homepage_payload(request) -> dict:
             "show_search": settings_row.show_search,
             "action_background_color": settings_row.action_background_color,
             "action_text_color": settings_row.action_text_color,
+            "footer_heading": settings_row.footer_heading,
+            "footer_background_color": settings_row.footer_background_color,
+            "footer_text_color": settings_row.footer_text_color,
         }
 
     action_links = [
@@ -102,6 +118,10 @@ def homepage_payload(request) -> dict:
                         "id": stat.id,
                         "display_value": stat.display_value,
                         "description": stat.description,
+                        "count_to": stat.count_to,
+                        "count_suffix": stat.count_suffix,
+                        "count_duration_ms": stat.count_duration_ms,
+                        "use_grouping": stat.use_grouping,
                         "background_color": stat.background_color,
                         "text_color": stat.text_color,
                     }
@@ -111,10 +131,56 @@ def homepage_payload(request) -> dict:
             }
         )
 
+    blocks = []
+    for block in LandingBlock.objects.filter(is_active=True):
+        blocks.append(
+            {
+                "id": block.id,
+                "kind": block.kind,
+                "title": block.title,
+                "body": block.body,
+                "button_label": block.button_label,
+                "button_url": block.button_url,
+                "image_url": _file_url(request, block.image_file) or block.image_url,
+                "background_color": block.background_color,
+                "overlay_color": block.overlay_color,
+                "text_color": block.text_color,
+                "button_color": block.button_color,
+                "button_text_color": block.button_text_color,
+                "group_key": block.group_key,
+            }
+        )
+
+    stories = []
+    for story in NewsStory.objects.filter(is_active=True):
+        stories.append(
+            {
+                "id": story.id,
+                "title": story.title,
+                "url": story.url,
+                "image_url": _file_url(request, story.image_file) or story.image_url,
+                "category": story.category,
+                "category_url": story.category_url,
+            }
+        )
+
+    offices = [
+        {"id": office.id, "body": office.body}
+        for office in FooterOffice.objects.filter(is_active=True)
+    ]
+    social_links = [
+        {"id": link.id, "label": link.label, "url": link.url}
+        for link in SocialLink.objects.filter(is_active=True)
+    ]
+
     return {
         "site": site,
         "action_links": action_links,
         "navigation": navigation,
         "slides": slides,
         "sections": sections,
+        "blocks": blocks,
+        "stories": stories,
+        "offices": offices,
+        "social_links": social_links,
     }

@@ -8,16 +8,31 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from content.models import ActionLink, HeroSlide, NavItem, PageSection, SiteSettings, Stat
+from content.models import (
+    ActionLink,
+    FooterOffice,
+    HeroSlide,
+    LandingBlock,
+    NavItem,
+    NewsStory,
+    PageSection,
+    SiteSettings,
+    SocialLink,
+    Stat,
+)
 from content.seed_data import (
     ACTION_LINKS,
     FACTS_TITLE,
+    FOOTER_OFFICES,
+    LANDING_BLOCKS,
     NAVIGATION,
+    NEWS_STORIES,
     PREDEFINED_EMAIL,
     PREDEFINED_PASSWORD,
     PREDEFINED_USERNAME,
     SITE,
     SLIDES,
+    SOCIAL_LINKS,
     STATS,
 )
 
@@ -33,6 +48,9 @@ class Command(BaseCommand):
             self._navigation()
             self._slides()
             self._facts()
+            self._landing()
+            self._news()
+            self._footer()
             self._staff_user()
         self.stdout.write(self.style.SUCCESS("Homepage content is loaded."))
         self.stdout.write(f"Django admin and API username: {PREDEFINED_USERNAME}")
@@ -41,6 +59,10 @@ class Command(BaseCommand):
     def _clear(self) -> None:
         Stat.objects.all().delete()
         PageSection.objects.all().delete()
+        NewsStory.objects.all().delete()
+        LandingBlock.objects.all().delete()
+        FooterOffice.objects.all().delete()
+        SocialLink.objects.all().delete()
         HeroSlide.objects.all().delete()
         ActionLink.objects.all().delete()
         NavItem.objects.all().delete()
@@ -100,6 +122,29 @@ class Command(BaseCommand):
         section = PageSection.objects.create(title=FACTS_TITLE, position=1)
         for position, stat in enumerate(STATS, start=1):
             Stat.objects.create(section=section, position=position, **stat)
+
+    def _save_image(self, row, url: str) -> None:
+        if not url or "youtu" in url:
+            return
+        image = self._download(url)
+        if image is not None:
+            row.image_file.save(image.name, image, save=True)
+
+    def _landing(self) -> None:
+        for position, block in enumerate(LANDING_BLOCKS, start=1):
+            row = LandingBlock.objects.create(position=position, **block)
+            self._save_image(row, row.image_url)
+
+    def _news(self) -> None:
+        for position, story in enumerate(NEWS_STORIES, start=1):
+            row = NewsStory.objects.create(position=position, **story)
+            self._save_image(row, row.image_url)
+
+    def _footer(self) -> None:
+        for position, office in enumerate(FOOTER_OFFICES, start=1):
+            FooterOffice.objects.create(position=position, **office)
+        for position, link in enumerate(SOCIAL_LINKS, start=1):
+            SocialLink.objects.create(position=position, **link)
 
     def _staff_user(self) -> None:
         User = get_user_model()
