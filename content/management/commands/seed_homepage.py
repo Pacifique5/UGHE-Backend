@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from urllib.error import URLError
 from urllib.request import Request, urlopen
@@ -83,6 +84,8 @@ class Command(BaseCommand):
 
     def _download(self, url: str) -> ContentFile | None:
         """Copy a public UGHE asset into local media so the page does not depend on hotlinking."""
+        if os.environ.get("SKIP_MEDIA_DOWNLOAD") == "1":
+            return None
         try:
             request = Request(url, headers={"User-Agent": "UGHE-Test-Web-App"})
             with urlopen(request, timeout=40) as response:
